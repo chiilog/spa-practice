@@ -3,6 +3,7 @@ import axios from "axios";
 import type { NextPage } from "next";
 import Head from "next/head";
 import { PrefecturesList } from "../components/PrefecturesList";
+import { PopulationGraph } from "../components/PopulationGraph";
 
 interface PrefecturesProps {
   message: null;
@@ -45,6 +46,11 @@ const Home: NextPage = () => {
         <div className="container mx-auto px-4 py-8">
           <h2 className="text-lg font-semibold mb-4">都道府県</h2>
           {prefectures && <PrefecturesList prefectures={prefectures.result} />}
+        </div>
+
+        <div className="container mx-auto px-4 py-8">
+          <h2 className="text-lg font-semibold mb-4">人口数</h2>
+          <PopulationGraph />
         </div>
       </>
     </>
