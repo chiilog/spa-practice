@@ -1,8 +1,34 @@
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import type { NextPage } from "next";
 import Head from "next/head";
-import { Prefectures } from "./prefectures";
+import { PrefecturesList } from "../components/PrefecturesList";
+
+interface PrefecturesProps {
+  message: null;
+  result: {
+    prefCode: number;
+    prefName: string;
+  }[];
+}
 
 const Home: NextPage = () => {
+  const [prefectures, setPrefectures] = useState<PrefecturesProps | null>(null);
+
+  useEffect(() => {
+    // FIXME: NEXT_PUBLIC_RESAS_API_KEY -> RESAS_API_KEY に変更する
+    axios
+      .get("https://opendata.resas-portal.go.jp/api/v1/prefectures", {
+        headers: { "X-API-KEY": `${process.env.NEXT_PUBLIC_RESAS_API_KEY}` },
+      })
+      .then((res) => {
+        if (res.data.statusCode === "403" || res.data.statusCode === "404") {
+          return;
+        }
+        setPrefectures(res.data);
+      });
+  }, []);
+
   return (
     <>
       <Head>
@@ -15,22 +41,10 @@ const Home: NextPage = () => {
         <h1 className="text-xl md:text-2xl text-center bg-red-200 p-4 md:p-8 font-semibold">
           都道府県別の総人口推移グラフ
         </h1>
+
         <div className="container mx-auto px-4 py-8">
           <h2 className="text-lg font-semibold mb-4">都道府県</h2>
-          <div className="grid grid-cols-4 gap-4">
-            {Prefectures.map((prefecture) => (
-              <div>
-                <label>
-                  <input
-                    type="checkbox"
-                    name="prefectures"
-                    value={prefecture}
-                  />
-                  <span className="pl-2">{prefecture}</span>
-                </label>
-              </div>
-            ))}
-          </div>
+          {prefectures && <PrefecturesList prefectures={prefectures.result} />}
         </div>
       </>
     </>
