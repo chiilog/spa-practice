@@ -4,27 +4,28 @@ import { prefDataProps } from "../type/pref";
 
 interface PrefecturesListProps {
   prefectures: prefDataProps[];
-  setPrefData: (Parameter: { prefCode?: number; prefName?: string }) => void;
+  prefData: prefDataProps[];
+  setPrefData: (Parameter: prefDataProps[]) => void;
 }
 
 /**
- * input + 都道府県名のリストを表示して、チェック状態を取得する
+ * [x] input + 都道府県名のリストを表示して、チェック状態を取得する
  * -[x] prefectures で渡ってきた引数から都道府県一覧を表示する
  * -[x] チェックされた都道府県の prefCode と prefName を取得する
  *   -[x] prefNameを表示するcheckboxを表示する
  *   -[x] checkboxを選択すると、選択したprefNameとprefCodeを取得する
- * - 取得したprefCodeとprefNameを渡せるようにする
+ * -[x] 取得したprefCodeとprefNameを渡せるようにする
  *   -[x] 取得したprefNameとprefCodeをstateに保存する
- *   - チェックしたprefNameとprefCodeを配列で保存する
- *   - stateにデータがある場合、RESASのAPIを呼び出す
- *   - APIのBodyにはprefNameとprefCodeを含める
+ *   -[x] チェックしたprefNameとprefCodeを配列で保存する
  *
  * @param prefectures
+ * @param prefData
  * @param setPrefData
  * @constructor
  */
 export const PrefecturesList: React.FC<PrefecturesListProps> = ({
   prefectures,
+  prefData,
   setPrefData,
 }) => {
   return (
@@ -37,9 +38,14 @@ export const PrefecturesList: React.FC<PrefecturesListProps> = ({
               name="prefectures"
               value={prefName}
               onChange={(event) => {
+                // TODO: リファクタリングできそう
                 event.target.checked
-                  ? setPrefData({ prefCode, prefName })
-                  : setPrefData({});
+                  ? setPrefData([...prefData, { prefCode, prefName }])
+                  : setPrefData(
+                      prefData.filter(
+                        (elm) => elm.prefName !== event.target.value
+                      )
+                    );
               }}
             />
             <span className="pl-2">{prefName}</span>

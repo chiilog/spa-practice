@@ -22,7 +22,7 @@ const Home: NextPage = () => {
     "../dammy/prefectures.json"
   );
 
-  const [prefData, setPrefData] = useState<prefDataProps | {}>({});
+  const [prefData, setPrefData] = useState<prefDataProps[]>([]);
   console.log(prefData);
 
   return (
@@ -43,6 +43,7 @@ const Home: NextPage = () => {
           {!prefecturesIsError && (
             <PrefecturesList
               prefectures={prefecturesData}
+              prefData={prefData}
               setPrefData={setPrefData}
             />
           )}
