@@ -1,34 +1,21 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React from "react";
 import type { NextPage } from "next";
 import Head from "next/head";
+
+import { useData } from "../hooks/useData";
 import { PrefecturesList } from "../components/PrefecturesList";
 import { PopulationGraph } from "../components/PopulationGraph";
 
-interface PrefecturesProps {
-  message: null;
-  result: {
-    prefCode: number;
-    prefName: string;
-  }[];
-}
-
 const Home: NextPage = () => {
-  const [prefectures, setPrefectures] = useState<PrefecturesProps | null>(null);
+  // FIXME: https://opendata.resas-portal.go.jp/api/v1/prefectures
+  const { data: prefecturesData, isError: prefecturesIsError } = useData(
+    "./dammy/prefectures.json"
+  );
 
-  useEffect(() => {
-    // FIXME: NEXT_PUBLIC_RESAS_API_KEY -> RESAS_API_KEY に変更する
-    axios
-      .get("https://opendata.resas-portal.go.jp/api/v1/prefectures", {
-        headers: { "X-API-KEY": `${process.env.NEXT_PUBLIC_RESAS_API_KEY}` },
-      })
-      .then((res) => {
-        if (res.data.statusCode === "403" || res.data.statusCode === "404") {
-          return;
-        }
-        setPrefectures(res.data);
-      });
-  }, []);
+  // FIXME: https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear
+  const { data: seriesData, isError: seriesIsError } = useData(
+    "./dammy/perYear.json"
+  );
 
   return (
     <>
@@ -45,12 +32,14 @@ const Home: NextPage = () => {
 
         <div className="container mx-auto px-4 py-8">
           <h2 className="text-lg font-semibold mb-4">都道府県</h2>
-          {prefectures && <PrefecturesList prefectures={prefectures.result} />}
+          {!prefecturesIsError && (
+            <PrefecturesList prefectures={prefecturesData} />
+          )}
         </div>
 
         <div className="container mx-auto px-4 py-8">
           <h2 className="text-lg font-semibold mb-4">人口数</h2>
-          <PopulationGraph />
+          {!seriesIsError && <PopulationGraph series={seriesData} />}
         </div>
       </>
     </>
