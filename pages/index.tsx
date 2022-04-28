@@ -1,18 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { NextPage } from "next";
 import Head from "next/head";
 
 import { prefDataProps } from "../type/pref";
 import { useData } from "../hooks/useData";
 import { PrefecturesList } from "../components/PrefecturesList";
+import { PopulationGraph } from "../components/PopulationGraph";
 
 /**
  * チェックされた都道府県の総人口グラフを表示する
- * - input 付きの都道府県リストの表示
+ * -[x] input 付きの都道府県リストの表示
  * - 人口数グラフの表示（HighchartsReactを利用）
- *   - チェックされた都道府県の一覧用の配列を作成する
- *   - チェックが外れた都道府県を配列から削除する
- *   - 作成した配列をPopulationGraph にわたす
  *
  * @constructor
  */
@@ -23,7 +21,6 @@ const Home: NextPage = () => {
   );
 
   const [prefData, setPrefData] = useState<prefDataProps[]>([]);
-  console.log(prefData);
 
   return (
     <>
@@ -51,6 +48,7 @@ const Home: NextPage = () => {
 
         <div className="container mx-auto px-4 py-8">
           <h2 className="text-lg font-semibold mb-4">人口数</h2>
+          <PopulationGraph checkedPrefectures={prefData} />
         </div>
       </>
     </>

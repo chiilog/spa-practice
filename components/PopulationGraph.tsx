@@ -1,76 +1,109 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
+import axios from "axios";
 
-const options = {
-  title: null,
-  xAxis: {
-    title: {
-      text: "年度",
-    },
-    categories: [
-      "2011",
-      "2012",
-      "2013",
-      "2014",
-      "2015",
-      "2016",
-      "2017",
-      "2018",
-      "2019",
-      "2020",
-      "2021",
-      "2022",
-    ],
-  },
-  yAxis: {
-    title: {
-      text: "人口",
-    },
-    plotLines: [
-      {
-        value: 0,
-        width: 1,
-        color: "#808080",
-      },
-    ],
-  },
-  series: [
+import { useData } from "../hooks/useData";
+import { prefDataProps } from "../type/pref";
+
+interface PopulationGraphProps {
+  checkedPrefectures: prefDataProps[];
+}
+
+interface populationProps {
+  name?: string;
+  data?: { year: number; value: number }[];
+}
+
+/**
+ * チェックされた都道府県の総人口数のグラフを作成する
+ * -[x] 渡されたcheckedPrefecturesの値をもとにRESASの人口構成APIを使用して都道府県別の配列を作成する
+ *   -[x] Highchartsのoptionで都道府県名が必要なので、都道府県名も忘れずオブジェクトに入れておく
+ * - 取得した都道府県別の人口構成から必要なデータのみに絞った配列を作成する
+ *   -[x] {name: 都道府県名, data: "RESASの総人口の配列の中身"} の配列を作成する
+ *      - HighchartsReact のoption -> series （都道府県別人口）に入れる
+ *   - 年度（横軸）の配列を作成する
+ *      - HighchartsReact のoption -> categories （年度）に入れる
+ *
+ * @param checkedPrefectures
+ * @constructor
+ */
+export const PopulationGraph: React.FC<PopulationGraphProps> = ({
+  checkedPrefectures,
+}) => {
+  const [population, setPopulation] = useState<populationProps[]>([]);
+
+  useEffect(() => {
+    checkedPrefectures?.map(({ prefCode, prefName }) => {
+      // FIXME: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${checkedPrefecture}`;
+      const url = "../dammy/perYear.json";
+
+      axios
+        .get(url, {
+          headers: { "X-API-KEY": `${process.env.NEXT_PUBLIC_RESAS_API_KEY}` },
+        })
+        .then((res) => {
+          if (res.data.statusCode === "403" || res.data.statusCode === "404") {
+            return;
+          }
+
+          setPopulation([
+            ...population,
+            {
+              name: prefName,
+              data: res.data.result.data[0].data,
+            },
+          ]);
+        });
+    });
+  }, [checkedPrefectures]);
+
+  /**
+   * 年度
+   */
+  const categories: string[] = [];
+  // population[0]?.data.forEach(({ value, year }) => {
+  //   categories.push(String(year));
+  // });
+
+  /**
+   * 都道府県別人口
+   */
+  const series: { name: string; data: number[] }[] = [
     {
       name: "北海道",
       data: [
         23.5, 32.2, 45.6, 20.3, 15.3, 56.4, 49.9, 53.5, 55.5, 33.2, 46.3, 43.2,
       ],
     },
-    {
-      name: "京都府",
-      data: [
-        15.3, 18.2, 25.7, 23.1, 26.9, 27.4, 30.5, 38.6, 40.2, 48.3, 35.2, 25.4,
-      ],
-    },
-    {
-      name: "新潟県",
-      data: [
-        18.5, 22.5, 29.3, 37.1, 39.3, 45.8, 44.3, 48.2, 43.6, 40.3, 37.7, 33.0,
-      ],
-    },
-    {
-      name: "福岡県",
-      data: [
-        7.2, 6.3, 8.9, 10.2, 12.5, 16.2, 18.2, 17.3, 16.5, 12.8, 10.3, 13.9,
-      ],
-    },
-    {
-      name: "兵庫県",
-      data: [
-        36.6, 37.2, 39.1, 30.2, 30.9, 28.3, 25.3, 24.8, 23.3, 20.7, 18.3, 19.7,
-      ],
-    },
-  ],
-};
+  ];
 
-export const PopulationGraph: React.FC = () => (
-  <div>
-    <HighchartsReact highcharts={Highcharts} options={options} />
-  </div>
-);
+  const options = {
+    title: null,
+    xAxis: {
+      title: {
+        text: "年度",
+      },
+      categories: categories,
+    },
+    yAxis: {
+      title: {
+        text: "人口",
+      },
+      plotLines: [
+        {
+          value: 0,
+          width: 1,
+          color: "#808080",
+        },
+      ],
+    },
+    series: series,
+  };
+
+  return (
+    <div>
+      <HighchartsReact highcharts={Highcharts} options={options} />
+    </div>
+  );
+};
