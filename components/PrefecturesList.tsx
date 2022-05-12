@@ -30,7 +30,7 @@ export const PrefecturesList: React.FC<PrefecturesListProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-4 gap-4">
-      {prefectures?.map(({ prefCode, prefName }) => (
+      {prefectures?.map(({ prefCode, prefName, checked }) => (
         <div key={prefName}>
           <label>
             <input
@@ -38,14 +38,29 @@ export const PrefecturesList: React.FC<PrefecturesListProps> = ({
               name="prefectures"
               value={prefName}
               onChange={(event) => {
-                // TODO: リファクタリングできそう
-                event.target.checked
-                  ? setPrefData([...prefData, { prefCode, prefName }])
-                  : setPrefData(
-                      prefData.filter(
-                        (elm) => elm.prefName !== event.target.value
-                      )
-                    );
+                /**
+                 * チェックした都道府県がすでにprefData内に存在するかどうかのチェック
+                 */
+                // TODO: 要リファクタリング
+                if (
+                  prefData.some(
+                    ({ prefName }) => prefName === event.target.value
+                  )
+                ) {
+                  const delPrefData = prefData.map((elm) => {
+                    if (elm.prefName === event.target.value) {
+                      return { ...elm, checked: event.target.checked };
+                    } else {
+                      return elm;
+                    }
+                  });
+                  setPrefData(delPrefData);
+                } else {
+                  setPrefData([
+                    ...prefData,
+                    { prefCode, prefName, checked: event.target.checked },
+                  ]);
+                }
               }}
             />
             <span className="pl-2">{prefName}</span>
