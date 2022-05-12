@@ -15,7 +15,7 @@ import { PopulationGraph } from "../components/PopulationGraph";
  * @constructor
  */
 const Home: NextPage = () => {
-  // FIXME: api -> `https://opendata.resas-portal.go.jp/api/v1/prefectures`;
+  // TODO: api -> `https://opendata.resas-portal.go.jp/api/v1/prefectures`;
   const { data: prefecturesData, isError: prefecturesIsError } = useData(
     "../dammy/prefectures.json"
   );
