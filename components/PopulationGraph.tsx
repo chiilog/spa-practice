@@ -3,7 +3,6 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import axios from "axios";
 
-import { useData } from "../hooks/useData";
 import { prefDataProps } from "../type/pref";
 
 interface PopulationGraphProps {
@@ -12,7 +11,17 @@ interface PopulationGraphProps {
 
 interface populationProps {
   name?: string;
-  data?: { year: number; value: number }[];
+  data?: number[];
+}
+
+/**
+ * データ提供年
+ * - RESAS側で1980-2045年（5年毎）の提供。
+ * - データ取得されるまで入らないのでベタで作成する
+ */
+const categories: number[] = [];
+for (let i = 1980; i <= 2045; i = i + 5) {
+  categories.push(i);
 }
 
 /**
@@ -22,8 +31,11 @@ interface populationProps {
  * - 取得した都道府県別の人口構成から必要なデータのみに絞った配列を作成する
  *   -[x] {name: 都道府県名, data: "RESASの総人口の配列の中身"} の配列を作成する
  *      - HighchartsReact のoption -> series （都道府県別人口）に入れる
- *   - 年度（横軸）の配列を作成する
- *      - HighchartsReact のoption -> categories （年度）に入れる
+ *   - [x]年度（横軸）の配列を作成する
+ *      - [x]HighchartsReact のoption -> categories （年度）に入れる
+ * -[] チェックを消したときにグラフを消す
+ *   -[] population の配列の中にチェックを消した都道府県が存在するかチェックする
+ *   -[] 存在しない場合、filterで該当する都道府県を含まない配列を作成する
  *
  * @param checkedPrefectures
  * @constructor
@@ -34,8 +46,8 @@ export const PopulationGraph: React.FC<PopulationGraphProps> = ({
   const [population, setPopulation] = useState<populationProps[]>([]);
 
   useEffect(() => {
-    checkedPrefectures?.map(({ prefCode, prefName }) => {
-      // FIXME: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${checkedPrefecture}`;
+    checkedPrefectures?.map(({ prefName, checked }) => {
+      // TODO: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${checkedPrefecture}`;
       const url = "../dammy/perYear.json";
 
       axios
@@ -47,36 +59,30 @@ export const PopulationGraph: React.FC<PopulationGraphProps> = ({
             return;
           }
 
-          setPopulation([
-            ...population,
-            {
-              name: prefName,
-              data: res.data.result.data[0].data,
-            },
-          ]);
+          const result: { year: number; value: number }[] =
+            res.data.result.data[0].data;
+          const data: number[] = [];
+
+          result.map(({ value }) => {
+            data.push(value);
+          });
+
+          // FIXME: 正確にとれてない。バグってる。複数回はしってる？
+          if (checked) {
+            console.log("まだないよ");
+            setPopulation([
+              ...population,
+              {
+                name: prefName,
+                data: data,
+              },
+            ]);
+          } else {
+            setPopulation(population.filter(({ name }) => name !== prefName));
+          }
         });
     });
-  }, [checkedPrefectures]);
-
-  /**
-   * 年度
-   */
-  const categories: string[] = [];
-  // population[0]?.data.forEach(({ value, year }) => {
-  //   categories.push(String(year));
-  // });
-
-  /**
-   * 都道府県別人口
-   */
-  const series: { name: string; data: number[] }[] = [
-    {
-      name: "北海道",
-      data: [
-        23.5, 32.2, 45.6, 20.3, 15.3, 56.4, 49.9, 53.5, 55.5, 33.2, 46.3, 43.2,
-      ],
-    },
-  ];
+  }, [setPopulation, checkedPrefectures]);
 
   const options = {
     title: null,
@@ -98,7 +104,7 @@ export const PopulationGraph: React.FC<PopulationGraphProps> = ({
         },
       ],
     },
-    series: series,
+    series: population,
   };
 
   return (
