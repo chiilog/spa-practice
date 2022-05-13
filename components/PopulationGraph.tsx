@@ -46,8 +46,8 @@ export const PopulationGraph: React.FC<PopulationGraphProps> = ({
   const [population, setPopulation] = useState<populationProps[]>([]);
 
   useEffect(() => {
-    checkedPrefectures?.map(({ prefName, checked }) => {
-      // TODO: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${checkedPrefecture}`;
+    checkedPrefectures?.map(({ prefCode, prefName, checked }) => {
+      // TODO: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${prefCode}`;
       const url = "../dammy/perYear.json";
 
       axios
@@ -67,22 +67,33 @@ export const PopulationGraph: React.FC<PopulationGraphProps> = ({
             data.push(value);
           });
 
-          // FIXME: 正確にとれてない。バグってる。複数回はしってる？
+          // TODO: コードが冗長では？
+          // FIXME: チェックをはずすときにpopulationがうまく更新できてない
           if (checked) {
-            console.log("まだないよ");
-            setPopulation([
-              ...population,
-              {
-                name: prefName,
-                data: data,
-              },
-            ]);
+            if (!population.find(({ name }) => name === prefName)) {
+              setPopulation([
+                ...population,
+                {
+                  name: prefName,
+                  data: data,
+                },
+              ]);
+            }
           } else {
-            setPopulation(population.filter(({ name }) => name !== prefName));
+            // FIXME: この時点でクリックバグある
+            console.log(`${prefName}をけしたい`);
+            setPopulation(
+              population.filter(({ name }) => {
+                return name !== prefName;
+              })
+            );
           }
         });
     });
-  }, [setPopulation, checkedPrefectures]);
+  }, [checkedPrefectures]);
+
+  console.log(population);
+  console.log(checkedPrefectures);
 
   const options = {
     title: null,
