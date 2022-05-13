@@ -43,7 +43,7 @@ export const PrefecturesList: React.FC<PrefecturesListProps> = ({
                  */
                 // TODO: 要リファクタリング
                 if (
-                  prefData.some(
+                  prefData.find(
                     ({ prefName }) => prefName === event.target.value
                   )
                 ) {
