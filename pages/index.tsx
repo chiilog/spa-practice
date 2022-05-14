@@ -8,19 +8,52 @@ import { PrefecturesList } from "../components/PrefecturesList";
 import { PopulationGraph } from "../components/PopulationGraph";
 
 /**
- * チェックされた都道府県の総人口グラフを表示する
- * -[x] input 付きの都道府県リストの表示
- * - 人口数グラフの表示（HighchartsReactを利用）
+ * 都道府県別の総人口推移グラフを表示するSPA(Single Page Application)の構築
  *
  * @constructor
  */
 const Home: NextPage = () => {
+  // RESAS-APIの都道府県一覧APIを使用して都道府県を取得する
   // TODO: api -> `https://opendata.resas-portal.go.jp/api/v1/prefectures`;
   const { data: prefecturesData, isError: prefecturesIsError } = useData(
     "../dammy/prefectures.json"
   );
 
+  /**
+   * チェックされた都道府県一覧を格納する変数の作成
+   */
   const [prefData, setPrefData] = useState<prefDataProps[]>([]);
+
+  /**
+   * チェックされた都道府県別の人口数を格納する変数の作成
+   */
+  const [populationData, setPopulationData] = useState<
+    {
+      name: string;
+      data: number[];
+    }[]
+  >([]);
+
+  useEffect(() => {
+    /**
+     * populationが0件のときの表示
+     */
+    if (populationData.length === 0) {
+      setPopulationData([{ name: "都道府県", data: [] }]);
+    }
+
+    /**
+     * チェックされた都道府県の人口構成を取得する
+     *  - API URL - api/v1/population/composition/perYear?prefCode=${prefCode}
+     *  - populationDataに該当する都道府県のオブジェクトを追加する
+     *   - 型はHighcharts JSの仕様に合わせて { name: string, data: number[] }
+     */
+
+    /**
+     * チェックを外した都道府県の人口構成を削除する
+     *  - populationDataから該当する都道府県のオブジェクトを削除する
+     */
+  }, [populationData]);
 
   return (
     <>
@@ -48,7 +81,7 @@ const Home: NextPage = () => {
 
         <div className="container mx-auto px-4 py-8">
           <h2 className="text-lg font-semibold mb-4">人口数</h2>
-          <PopulationGraph checkedPrefectures={prefData} />
+          <PopulationGraph series={populationData} />
         </div>
       </>
     </>
