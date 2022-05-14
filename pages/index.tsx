@@ -16,16 +16,10 @@ import { PopulationGraph } from "../components/PopulationGraph";
  * @constructor
  */
 const Home: NextPage = () => {
-  // RESAS-APIの都道府県一覧APIを使用して都道府県を取得する
-  // TODO: api -> `https://opendata.resas-portal.go.jp/api/v1/prefectures`;
-  const { data: prefecturesData, isError: prefecturesIsError } = useData(
-    "../dammy/prefectures.json"
-  );
-
   /**
    * チェックされた都道府県一覧を格納する変数の作成
    */
-  const [PrefectureData, setPrefectureData] = useState<PrefectureDataProps[]>(
+  const [prefectureData, setPrefectureData] = useState<PrefectureDataProps[]>(
     []
   );
 
@@ -39,6 +33,48 @@ const Home: NextPage = () => {
     }[]
   >([]);
 
+  /**
+   * 都道府県クリックでprefectureDataの配列操作する
+   */
+  const onChangeHandler = (
+    prefCode: number | undefined,
+    prefName: string,
+    checked: boolean
+  ) => {
+    /**
+     * チェックした都道府県がすでにprefectureData内に存在するかどうかのチェック
+     */
+    // TODO: 要リファクタリング
+    if (
+      prefectureData.find(
+        ({ prefName: dataPrefName }) => dataPrefName === prefName
+      )
+    ) {
+      /**
+       * prefectureDataに存在する場合、値を上書きする（例：checkedのtrue / false）
+       */
+     const updatePrefectureData = prefectureData.map((elm) => {
+        if (elm.prefName === prefName) {
+          return { ...elm, checked };
+        } else {
+          return elm;
+        }
+      });
+      setPrefectureData(updatePrefectureData);
+    } else {
+      /**
+       * prefectureDataに存在しない場合セットする
+       */
+      setPrefectureData([...prefectureData, { prefCode, prefName, checked }]);
+    }
+  };
+
+  // RESAS-APIの都道府県一覧APIを使用して都道府県を取得する
+  // TODO: api -> `https://opendata.resas-portal.go.jp/api/v1/prefectures`;
+  const { data: prefecturesData, isError: prefecturesIsError } = useData(
+    "../dammy/prefectures.json"
+  );
+
   useEffect(() => {
     /**
      * populationが0件のときの表示
@@ -47,7 +83,7 @@ const Home: NextPage = () => {
       setPrefPopulationsData([{ name: "都道府県", data: [] }]);
     }
 
-    PrefectureData.map(({ prefCode, prefName, checked }) => {
+    prefectureData.map(({ prefCode, prefName, checked }) => {
       // TODO: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${prefCode}`;
       const url = "../dammy/perYear.json";
 
@@ -84,7 +120,7 @@ const Home: NextPage = () => {
           }
         });
     });
-  }, [PrefectureData, setPrefPopulationsData]);
+  }, [prefectureData, setPrefPopulationsData]);
 
   return (
     <>
@@ -104,8 +140,7 @@ const Home: NextPage = () => {
           {!prefecturesIsError && (
             <PrefecturesList
               prefectures={prefecturesData}
-              PrefectureData={PrefectureData}
-              setPrefectureData={setPrefectureData}
+              onChangeEvent={onChangeHandler}
             />
           )}
         </div>

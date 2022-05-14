@@ -4,8 +4,11 @@ import { PrefectureDataProps } from "../type/pref";
 
 interface PrefecturesListProps {
   prefectures: PrefectureDataProps[];
-  PrefectureData: PrefectureDataProps[];
-  setPrefectureData: (Parameter: PrefectureDataProps[]) => void;
+  onChangeEvent: (
+    prefCode: number | undefined,
+    prefName: string,
+    checked: boolean
+  ) => void;
 }
 
 /**
@@ -19,14 +22,12 @@ interface PrefecturesListProps {
  *   -[x] チェックしたprefNameとprefCodeを配列で保存する
  *
  * @param prefectures
- * @param PrefectureData
- * @param setPrefectureData
+ * @param onChangeEvent
  * @constructor
  */
 export const PrefecturesList: React.FC<PrefecturesListProps> = ({
   prefectures,
-  PrefectureData,
-  setPrefectureData,
+  onChangeEvent,
 }) => {
   return (
     <div className="grid grid-cols-4 gap-4">
@@ -37,31 +38,13 @@ export const PrefecturesList: React.FC<PrefecturesListProps> = ({
               type="checkbox"
               name="prefectures"
               value={prefName}
-              onChange={(event) => {
-                /**
-                 * チェックした都道府県がすでにprefData内に存在するかどうかのチェック
-                 */
-                // TODO: 要リファクタリング
-                if (
-                  PrefectureData.find(
-                    ({ prefName }) => prefName === event.target.value
-                  )
-                ) {
-                  const delPrefData = PrefectureData.map((elm) => {
-                    if (elm.prefName === event.target.value) {
-                      return { ...elm, checked: event.target.checked };
-                    } else {
-                      return elm;
-                    }
-                  });
-                  setPrefectureData(delPrefData);
-                } else {
-                  setPrefectureData([
-                    ...PrefectureData,
-                    { prefCode, prefName, checked: event.target.checked },
-                  ]);
-                }
-              }}
+              onChange={(event) =>
+                onChangeEvent(
+                  prefCode,
+                  event.target.value,
+                  event.target.checked
+                )
+              }
             />
             <span className="pl-2">{prefName}</span>
           </label>
