@@ -12,13 +12,17 @@ for (let i = 1980; i <= 2045; i = i + 5) {
   categories.push(i);
 }
 
+interface PopulationGraphProps {
+  series: { name: string, data: number[] }[];
+}
+
 /**
  * チェックされた都道府県の総人口数のグラフを表示する
  *
  * @param checkedPrefectures
  * @constructor
  */
-export const PopulationGraph: FC = () => {
+export const PopulationGraph: FC<PopulationGraphProps> = ({ series }) => {
   const options = {
     title: null,
     xAxis: {
@@ -39,7 +43,7 @@ export const PopulationGraph: FC = () => {
         },
       ],
     },
-    series: [{}],
+    series: series,
   };
 
   return (
