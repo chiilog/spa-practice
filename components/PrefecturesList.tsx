@@ -1,11 +1,11 @@
 import React from "react";
 
-import { prefDataProps } from "../type/pref";
+import { PrefectureDataProps } from "../type/pref";
 
 interface PrefecturesListProps {
-  prefectures: prefDataProps[];
-  prefData: prefDataProps[];
-  setPrefData: (Parameter: prefDataProps[]) => void;
+  prefectures: PrefectureDataProps[];
+  PrefectureData: PrefectureDataProps[];
+  setPrefectureData: (Parameter: PrefectureDataProps[]) => void;
 }
 
 /**
@@ -19,14 +19,14 @@ interface PrefecturesListProps {
  *   -[x] チェックしたprefNameとprefCodeを配列で保存する
  *
  * @param prefectures
- * @param prefData
- * @param setPrefData
+ * @param PrefectureData
+ * @param setPrefectureData
  * @constructor
  */
 export const PrefecturesList: React.FC<PrefecturesListProps> = ({
   prefectures,
-  prefData,
-  setPrefData,
+  PrefectureData,
+  setPrefectureData,
 }) => {
   return (
     <div className="grid grid-cols-4 gap-4">
@@ -43,21 +43,21 @@ export const PrefecturesList: React.FC<PrefecturesListProps> = ({
                  */
                 // TODO: 要リファクタリング
                 if (
-                  prefData.find(
+                  PrefectureData.find(
                     ({ prefName }) => prefName === event.target.value
                   )
                 ) {
-                  const delPrefData = prefData.map((elm) => {
+                  const delPrefData = PrefectureData.map((elm) => {
                     if (elm.prefName === event.target.value) {
                       return { ...elm, checked: event.target.checked };
                     } else {
                       return elm;
                     }
                   });
-                  setPrefData(delPrefData);
+                  setPrefectureData(delPrefData);
                 } else {
-                  setPrefData([
-                    ...prefData,
+                  setPrefectureData([
+                    ...PrefectureData,
                     { prefCode, prefName, checked: event.target.checked },
                   ]);
                 }

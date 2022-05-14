@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import type { NextPage } from "next";
 import Head from "next/head";
 
-import { prefDataProps } from "../type/pref";
+import axios from "axios";
+
+import { PrefectureDataProps } from "../type/pref";
+
 import { useData } from "../hooks/useData";
 import { PrefecturesList } from "../components/PrefecturesList";
 import { PopulationGraph } from "../components/PopulationGraph";
@@ -22,12 +25,14 @@ const Home: NextPage = () => {
   /**
    * チェックされた都道府県一覧を格納する変数の作成
    */
-  const [prefData, setPrefData] = useState<prefDataProps[]>([]);
+  const [PrefectureData, setPrefectureData] = useState<PrefectureDataProps[]>(
+    []
+  );
 
   /**
    * チェックされた都道府県別の人口数を格納する変数の作成
    */
-  const [populationData, setPopulationData] = useState<
+  const [prefPopulationsData, setPrefPopulationsData] = useState<
     {
       name: string;
       data: number[];
@@ -38,22 +43,48 @@ const Home: NextPage = () => {
     /**
      * populationが0件のときの表示
      */
-    if (populationData.length === 0) {
-      setPopulationData([{ name: "都道府県", data: [] }]);
+    if (prefPopulationsData.length === 0) {
+      setPrefPopulationsData([{ name: "都道府県", data: [] }]);
     }
 
-    /**
-     * チェックされた都道府県の人口構成を取得する
-     *  - API URL - api/v1/population/composition/perYear?prefCode=${prefCode}
-     *  - populationDataに該当する都道府県のオブジェクトを追加する
-     *   - 型はHighcharts JSの仕様に合わせて { name: string, data: number[] }
-     */
+    PrefectureData.map(({ prefCode, prefName, checked }) => {
+      // TODO: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${prefCode}`;
+      const url = "../dammy/perYear.json";
 
-    /**
-     * チェックを外した都道府県の人口構成を削除する
-     *  - populationDataから該当する都道府県のオブジェクトを削除する
-     */
-  }, [populationData]);
+      axios
+        .get(url, {
+          headers: { "X-API-KEY": `${process.env.NEXT_PUBLIC_RESAS_API_KEY}` },
+        })
+        .then((res) => {
+          if (res.data.statusCode === "403" || res.data.statusCode === "404") {
+            return;
+          }
+
+          /**
+           * 総人口数のみ使用するので、dataに該当の配列を切り出す
+           */
+          const result: { year: number; value: number }[] =
+            res.data.result.data[0].data;
+          const data: number[] = [];
+          result.forEach(({ value }) => {
+            data.push(value);
+          });
+
+          if (checked) {
+            /**
+             * チェックされた都道府県の人口構成を取得する
+             *  - prefPopulationsDataに該当する都道府県のオブジェクトを追加する
+             *   - 型はHighcharts JSの仕様に合わせて { name: string, data: number[] }
+             */
+          } else {
+            /**
+             * チェックを外した都道府県の人口構成を削除する
+             *  - prefPopulationsDataから該当する都道府県のオブジェクトを削除する
+             */
+          }
+        });
+    });
+  }, [PrefectureData, setPrefPopulationsData]);
 
   return (
     <>
@@ -73,15 +104,15 @@ const Home: NextPage = () => {
           {!prefecturesIsError && (
             <PrefecturesList
               prefectures={prefecturesData}
-              prefData={prefData}
-              setPrefData={setPrefData}
+              PrefectureData={PrefectureData}
+              setPrefectureData={setPrefectureData}
             />
           )}
         </div>
 
         <div className="container mx-auto px-4 py-8">
           <h2 className="text-lg font-semibold mb-4">人口数</h2>
-          <PopulationGraph series={populationData} />
+          <PopulationGraph series={prefPopulationsData} />
         </div>
       </>
     </>
