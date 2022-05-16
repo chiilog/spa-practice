@@ -1,5 +1,5 @@
 export type PrefectureDataProps = {
   prefCode?: number;
-  prefName?: string;
+  prefName: string;
   checked: boolean;
 };
