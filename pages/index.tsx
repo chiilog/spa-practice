@@ -14,6 +14,12 @@ interface PrefPopulationDataProps {
   name: string;
   data: number[];
 }
+const getPopulationNumberByYear = async (url: string) => {
+  const response = await axios.get(url, {
+    headers: { "X-API-KEY": `${process.env.NEXT_PUBLIC_RESAS_API_KEY}` },
+  });
+  return response.data.result.data[0].data;
+};
 
 /**
  * 都道府県別の総人口推移グラフを表示するSPA(Single Page Application)の構築
@@ -77,12 +83,36 @@ const Home: NextPage = () => {
     }
   };
 
+  /**
+   * APIから総人口数を取得する関数
+   *  - APIからは{ year: number, value: number } が返ってくる
+   *
+   * @param url
+   * @returns
+   */
+  const [populationNumbers, setPopulationNumbers] = useState<number[]>();
+
   useEffect(() => {
     /**
      * prefectureDataを元にprefPopulationsDataの配列を作成する
      */
     const _prefPopulationData: PrefPopulationDataProps[] = prefectureData
       .map(({ prefCode, prefName, checked }) => {
+        // TODO: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${prefCode}`;
+        const url = "../dammy/perYear.json";
+
+        const fetchNumbersData = async () => {
+          /**
+           * 年度別総人口数から総人口数（value）のみ抜き出してpopulationNumbersにセットする
+           */
+          const response: { year: number; value: number }[] =
+            await getPopulationNumberByYear(url);
+          const numbers: number[] = [];
+          response.forEach(({ value }) => numbers.push(value));
+          const num = response.map(({ value }) => value);
+          setPopulationNumbers(numbers);
+        };
+        fetchNumbersData();
 
         if (checked) {
           /**
@@ -91,7 +121,7 @@ const Home: NextPage = () => {
            *   - 型はHighcharts JSの仕様に合わせて { name: string, data: number[] }
            *  - prefPopulationsData内に該当する都道府県のデータがないときだけ処理する
            */
-          return { name: prefName, data: [111, 222, 333] };
+          return { name: prefName, data: populationNumbers };
         } else {
           /**
            * チェックを外した都道府県の人口構成を削除する
@@ -107,7 +137,7 @@ const Home: NextPage = () => {
      */
 
     /**
-     * set
+     * グラフに表示するデータをセットする
      */
     setPrefPopulationsData(_prefPopulationData);
   }, [prefectureData]);
