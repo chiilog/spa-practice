@@ -43,7 +43,7 @@ export const PopulationGraph: FC<PopulationGraphProps> = ({ series }) => {
         },
       ],
     },
-    series: series,
+    series: series.length === 0 ? ([{ name: "都道府県", data: [] }]) : series,
   };
 
   return (
