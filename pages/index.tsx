@@ -96,50 +96,52 @@ const Home: NextPage = () => {
     /**
      * prefectureDataを元にprefPopulationsDataの配列を作成する
      */
-    const _prefPopulationData: PrefPopulationDataProps[] = prefectureData
-      .map(({ prefCode, prefName, checked }) => {
-        // TODO: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${prefCode}`;
-        const url = "../dammy/perYear.json";
+     (async () => {
+      const _prefPopulationData: Array<PrefPopulationDataProps | null> =
+        await Promise.all(
+          prefectureData.map(async ({ prefName, checked, prefCode }) => {
+            if (checked) {
+              const existsPrefData = prefPopulationsData.find(({ name }) => {
+                return name === prefName;
+              });
+              if (existsPrefData) {
+                return existsPrefData;
+              }
+              /**
+               * 年度別総人口数から総人口数（value）のみ抜き出してpopulationNumbersにセットする
+               */
+              // TODO: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${prefCode}`;
+              const url = `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${prefCode}`;
+              const response: { year: number; value: number }[] =
+                await getPopulationNumberByYear(url);
+              const numbers: number[] = response.map(({ value }) => value);
+              /**
+               * チェックされた都道府県の人口構成を取得する
+               *  - prefPopulationsDataに該当する都道府県のオブジェクトを追加する
+               *   - 型はHighcharts JSの仕様に合わせて { name: string, data: number[] }
+               *  - prefPopulationsData内に該当する都道府県のデータがないときだけ処理する
+               */
+              return { name: prefName, data: numbers };
+            } else {
+              /**
+               * チェックを外した都道府県の人口構成を削除する
+               *  - prefPopulationsDataから該当する都道府県のオブジェクトを削除する
+               */
+              return null;
+            }
+          })
+        );
 
-        const fetchNumbersData = async () => {
-          /**
-           * 年度別総人口数から総人口数（value）のみ抜き出してpopulationNumbersにセットする
-           */
-          const response: { year: number; value: number }[] =
-            await getPopulationNumberByYear(url);
-          const numbers: number[] = [];
-          response.forEach(({ value }) => numbers.push(value));
-          const num = response.map(({ value }) => value);
-          setPopulationNumbers(numbers);
-        };
-        fetchNumbersData();
-
-        if (checked) {
-          /**
-           * チェックされた都道府県の人口構成を取得する
-           *  - prefPopulationsDataに該当する都道府県のオブジェクトを追加する
-           *   - 型はHighcharts JSの仕様に合わせて { name: string, data: number[] }
-           *  - prefPopulationsData内に該当する都道府県のデータがないときだけ処理する
-           */
-          return { name: prefName, data: populationNumbers };
-        } else {
-          /**
-           * チェックを外した都道府県の人口構成を削除する
-           *  - prefPopulationsDataから該当する都道府県のオブジェクトを削除する
-           */
-          return null;
-        }
-      })
-      .filter((data): data is PrefPopulationDataProps => !!data);
-
-    /**
-     * MEMO: mapのあとのfilterのタイプガードはよく使われる。
-     */
-
-    /**
-     * グラフに表示するデータをセットする
-     */
-    setPrefPopulationsData(_prefPopulationData);
+      /**
+       * グラフに表示するデータをセットする
+       */
+      setPrefPopulationsData(
+        _prefPopulationData.filter(
+          (data): data is PrefPopulationDataProps => !!data
+        )
+      );
+    })();
+    //
   }, [prefectureData]);
 
   return (
