@@ -10,6 +10,11 @@ import { useData } from "../hooks/useData";
 import { PrefecturesList } from "../components/PrefecturesList";
 import { PopulationGraph } from "../components/PopulationGraph";
 
+interface PrefPopulationDataProps {
+  name: string;
+  data: number[];
+}
+
 /**
  * 都道府県別の総人口推移グラフを表示するSPA(Single Page Application)の構築
  *
@@ -27,11 +32,14 @@ const Home: NextPage = () => {
    * チェックされた都道府県別の人口数を格納する変数の作成
    */
   const [prefPopulationsData, setPrefPopulationsData] = useState<
-    {
-      name: string;
-      data: number[];
-    }[]
+    PrefPopulationDataProps[]
   >([]);
+
+  // RESAS-APIの都道府県一覧APIを使用して都道府県を取得する
+  // TODO: api -> `https://opendata.resas-portal.go.jp/api/v1/prefectures`;
+  const { data: prefecturesData, isError: prefecturesIsError } = useData(
+    "../dammy/prefectures.json"
+  );
 
   /**
    * 都道府県クリックでprefectureDataの配列操作する
@@ -53,7 +61,7 @@ const Home: NextPage = () => {
       /**
        * prefectureDataに存在する場合、値を上書きする（例：checkedのtrue / false）
        */
-     const updatePrefectureData = prefectureData.map((elm) => {
+      const updatePrefectureData = prefectureData.map((elm) => {
         if (elm.prefName === prefName) {
           return { ...elm, checked };
         } else {
@@ -69,58 +77,40 @@ const Home: NextPage = () => {
     }
   };
 
-  // RESAS-APIの都道府県一覧APIを使用して都道府県を取得する
-  // TODO: api -> `https://opendata.resas-portal.go.jp/api/v1/prefectures`;
-  const { data: prefecturesData, isError: prefecturesIsError } = useData(
-    "../dammy/prefectures.json"
-  );
-
   useEffect(() => {
     /**
-     * populationが0件のときの表示
+     * prefectureDataを元にprefPopulationsDataの配列を作成する
      */
-    if (prefPopulationsData.length === 0) {
-      setPrefPopulationsData([{ name: "都道府県", data: [] }]);
-    }
+    const _prefPopulationData: PrefPopulationDataProps[] = prefectureData
+      .map(({ prefCode, prefName, checked }) => {
 
-    prefectureData.map(({ prefCode, prefName, checked }) => {
-      // TODO: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${prefCode}`;
-      const url = "../dammy/perYear.json";
-
-      axios
-        .get(url, {
-          headers: { "X-API-KEY": `${process.env.NEXT_PUBLIC_RESAS_API_KEY}` },
-        })
-        .then((res) => {
-          if (res.data.statusCode === "403" || res.data.statusCode === "404") {
-            return;
-          }
-
+        if (checked) {
           /**
-           * 総人口数のみ使用するので、dataに該当の配列を切り出す
+           * チェックされた都道府県の人口構成を取得する
+           *  - prefPopulationsDataに該当する都道府県のオブジェクトを追加する
+           *   - 型はHighcharts JSの仕様に合わせて { name: string, data: number[] }
+           *  - prefPopulationsData内に該当する都道府県のデータがないときだけ処理する
            */
-          const result: { year: number; value: number }[] =
-            res.data.result.data[0].data;
-          const data: number[] = [];
-          result.forEach(({ value }) => {
-            data.push(value);
-          });
+          return { name: prefName, data: [111, 222, 333] };
+        } else {
+          /**
+           * チェックを外した都道府県の人口構成を削除する
+           *  - prefPopulationsDataから該当する都道府県のオブジェクトを削除する
+           */
+          return null;
+        }
+      })
+      .filter((data): data is PrefPopulationDataProps => !!data);
 
-          if (checked) {
-            /**
-             * チェックされた都道府県の人口構成を取得する
-             *  - prefPopulationsDataに該当する都道府県のオブジェクトを追加する
-             *   - 型はHighcharts JSの仕様に合わせて { name: string, data: number[] }
-             */
-          } else {
-            /**
-             * チェックを外した都道府県の人口構成を削除する
-             *  - prefPopulationsDataから該当する都道府県のオブジェクトを削除する
-             */
-          }
-        });
-    });
-  }, [prefectureData, setPrefPopulationsData]);
+    /**
+     * MEMO: mapのあとのfilterのタイプガードはよく使われる。
+     */
+
+    /**
+     * set
+     */
+    setPrefPopulationsData(_prefPopulationData);
+  }, [prefectureData]);
 
   return (
     <>
