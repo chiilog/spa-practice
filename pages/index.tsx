@@ -42,9 +42,8 @@ const Home: NextPage = () => {
   >([]);
 
   // RESAS-APIの都道府県一覧APIを使用して都道府県を取得する
-  // TODO: api -> `https://opendata.resas-portal.go.jp/api/v1/prefectures`;
   const { data: prefecturesData, isError: prefecturesIsError } = useData(
-    "../dammy/prefectures.json"
+    "https://opendata.resas-portal.go.jp/api/v1/prefectures"
   );
 
   /**
@@ -58,7 +57,6 @@ const Home: NextPage = () => {
     /**
      * チェックした都道府県がすでにprefectureData内に存在するかどうかのチェック
      */
-    // TODO: 要リファクタリング
     if (
       prefectureData.find(
         ({ prefName: dataPrefName }) => dataPrefName === prefName
@@ -98,8 +96,7 @@ const Home: NextPage = () => {
      */
     const _prefPopulationData: PrefPopulationDataProps[] = prefectureData
       .map(({ prefCode, prefName, checked }) => {
-        // TODO: url -> `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${prefCode}`;
-        const url = "../dammy/perYear.json";
+        const url = `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=${prefCode}`;
 
         const fetchNumbersData = async () => {
           /**
